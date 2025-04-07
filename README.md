@@ -1,3 +1,13 @@
+# Godot + Yodo1 MAS SDK Integration
+
+This fork adds Yodo1 ad SDK support (banner, interstitial, rewarded) for iOS platforms.
+
+## Branch Info
+
+- Based on: [Godot v4.4](https://github.com/godotengine/godot/tree/4.4)
+
+By [Gabor Bacsi](https://github.com/BacheyG)
+
 # Godot Engine
 
 <p align="center">

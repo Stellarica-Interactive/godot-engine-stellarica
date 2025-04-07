@@ -1,0 +1,3 @@
+More info: https://docs.godotengine.org/en/stable/contributing/development/compiling/compiling_for_ios.html
+
+scons platform=ios target=template_release generate_bundle=yes
