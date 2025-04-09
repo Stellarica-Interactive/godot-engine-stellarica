@@ -1,36 +1,51 @@
 #include "GodotYodo1Mas.h"
 #import "app_delegate.h"
 #import "Yodo1Mas.h"
+#import "Yodo1MasBanner.h"
 
-static GodotYodo1Mas *godotYodo1MasInstance = NULL;
+static GodotYodo1Mas* godotYodo1MasInstance = NULL;
+
+static Yodo1MasBannerAdView* bannerView = NULL;
 
 
 // BEGIN CALLBALS
-@interface GodotYodo1MasBannerAd: NSObject<Yodo1MasBannerAdDelegate>
+@interface GodotYodo1MasBannerAd: NSObject<Yodo1MasBannerAdViewDelegate>
+
+- (void)setAdDelegate;
 
 @end
 
 @implementation GodotYodo1MasBannerAd
 
 - (void)setAdDelegate {
-	//[Yodo1MasInterstitialAd sharedInstance].adDelegate = self;
-}
-
-- (void)onAdOpened:(Yodo1MasAdEvent *)event {
-	NSLog(@"GodotYodo1MasWrapper -> GodotYodo1MasBannerAd onAdOpened");
-    godotYodo1MasInstance->emit_signal("onBannerAdOpened");
-}
-
-- (void)onAdClosed:(Yodo1MasAdEvent *)event {
-	NSLog(@"GodotYodo1MasWrapper -> GodotYodo1MasBannerAd onAdClosed");
-    godotYodo1MasInstance->emit_signal("onBannerAdClosed");
-}
-
-- (void)onAdError:(Yodo1MasAdEvent *)event error:(Yodo1MasError *)error {
-	if (error.code != Yodo1MasErrorCodeAdLoadFail) {
-		NSLog(@"GodotYodo1MasWrapper -> GodotYodo1MasBannerAd onAdError, %d", (int)error.code);
-	    godotYodo1MasInstance->emit_signal("on_banner_ad_error", (int)error.code);	
+	if (bannerView) {
+		bannerView.adDelegate = self;
 	}
+}
+
+- (void)onBannerAdLoaded:(Yodo1MasBannerAdView *)banner {
+	NSLog(@"GodotYodo1MasWrapper -> GodotYodo1MasBannerAd onBannerAdLoaded");
+	godotYodo1MasInstance->emit_signal("onBannerAdLoaded");
+}
+
+- (void)onBannerAdFailedToLoad:(Yodo1MasBannerAdView *)banner withError:(Yodo1MasError *)error {
+	NSLog(@"GodotYodo1MasWrapper -> GodotYodo1MasBannerAd onBannerAdFailedToLoad");
+	godotYodo1MasInstance->emit_signal("onBannerAdFailedToLoad");
+}
+
+- (void)onBannerAdOpened:(Yodo1MasBannerAdView *)banner {
+	NSLog(@"GodotYodo1MasWrapper -> GodotYodo1MasBannerAd onBannerAdOpened");
+	godotYodo1MasInstance->emit_signal("onBannerAdOpened");
+}
+
+- (void)onBannerAdFailedToOpen:(Yodo1MasBannerAdView *)banner withError:(Yodo1MasError *)error {
+	NSLog(@"GodotYodo1MasWrapper -> GodotYodo1MasBannerAd onBannerAdFailedToOpen");
+	godotYodo1MasInstance->emit_signal("onBannerAdFailedToOpen");
+}
+
+- (void)onBannerAdClosed:(Yodo1MasBannerAdView *)banner {
+	NSLog(@"GodotYodo1MasWrapper -> GodotYodo1MasBannerAd onBannerAdClosed");
+	godotYodo1MasInstance->emit_signal("onBannerAdClosed");
 }
 
 @end
@@ -126,12 +141,29 @@ static GodotYodo1Mas *godotYodo1MasInstance = NULL;
 
 // END CALLBALS
 
+@interface RotationObserver : NSObject
+@property (nonatomic, assign) GodotYodo1Mas *owner;
+@end
+
+@implementation RotationObserver
+
+- (void)orientationChanged:(NSNotification *)notification {
+	dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.1 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+		godotYodo1MasInstance->updateBannerPosition();
+	});
+}
+
+@end
 
 
 // BEGIN INITIALIZATION
 
 bool initialized;
-	
+bool rewardAdinitializeRequest;
+NSString* bannerHAlign;
+NSString* bannerVAlign;
+RotationObserver* rotationObserver;
+
 GodotYodo1Mas::GodotYodo1Mas() {
 	godotYodo1MasInstance = this;
 }
@@ -158,17 +190,26 @@ void GodotYodo1Mas::setCOPPA(bool coppa) {
 
 void GodotYodo1Mas::init(const String &appId) {
     NSLog(@"GodotYodo1MasWrapper init");
+	rotationObserver = [[RotationObserver alloc] init];
+	[[NSNotificationCenter defaultCenter] addObserver:rotationObserver
+											 selector:@selector(orientationChanged:)
+												 name:UIDeviceOrientationDidChangeNotification
+											   object:nil];
 
-	setBannerCallback();
-	setInterstitialAdCallback();	
+	setInterstitialAdCallback();
 	setRewardedAdCallback();
 		
 	NSString *appIdPr = [NSString stringWithCString:appId.utf8().get_data() encoding: NSUTF8StringEncoding];
     [[Yodo1Mas sharedInstance] initMasWithAppKey:appIdPr successful:^{
 		initialized = true;
 		NSLog(@"GodotYodo1MasWrapper -> initialize successful");
+		godotYodo1MasInstance->emit_signal("onMasInitSuccessful");
+		if (rewardAdinitializeRequest) {
+			initializeRewardedAd();
+		}
     } fail:^(NSError * _Nonnull error) {
 		NSLog(@"GodotYodo1MasWrapper -> initialize error: %@", error);
+		godotYodo1MasInstance->emit_signal("onMasInitFailed");
     }];
 }
 
@@ -225,18 +266,93 @@ void GodotYodo1Mas::loadBannerAd(const String &size, const String& horizontalALi
 		NSLog(@"loadBannerAd: GodotYodo1MasWrapper not initialized");
 		return;
 	}
-	// TODO
-	//[[Yodo1MasBannerAd]]
+	if (bannerView) {
+		[bannerView removeFromSuperview];
+		bannerView = nil;
+	}
+	
+	NSLog(@"loadBannerAd: Setting up banner view");
+
+	// Create banner
+	bannerView = [[Yodo1MasBannerAdView alloc] init];
+	
+	NSString *placement = [NSString stringWithCString:placementId.utf8().get_data() encoding: NSUTF8StringEncoding];
+	[bannerView setAdPlacement:placement];
+	
+	setBannerCallback();
+	
+	NSString *sizePr = [NSString stringWithCString:size.utf8().get_data() encoding: NSUTF8StringEncoding];
+
+	// Size mapping – optional, defaults to adaptive
+	if ([sizePr isEqualToString:@"Banner"]) {
+		bannerView.adSize = Yodo1MasBannerAdSizeBanner;
+	} else if ([sizePr isEqualToString:@"LargeBanner"]) {
+		bannerView.adSize = Yodo1MasBannerAdSizeLargeBanner;
+	} else {
+		bannerView.adSize = Yodo1MasBannerAdSizeBanner; // fallback
+	}
+
+	[bannerView loadAd];
+
+	// Add to main view
+	UIView *rootView = [UIApplication sharedApplication].keyWindow.rootViewController.view;
+	[rootView addSubview:bannerView];
+	
+	bannerHAlign = [NSString stringWithCString:horizontalALignment.utf8().get_data() encoding: NSUTF8StringEncoding];
+	bannerVAlign = [NSString stringWithCString:verticalAlignment.utf8().get_data() encoding: NSUTF8StringEncoding];
+	
+	godotYodo1MasInstance->updateBannerPosition();
+}
+
+void GodotYodo1Mas::updateBannerPosition() {
+	if (!bannerView) {
+		NSLog(@"[updateBannerPosition] not having, returning");
+		return;
+	}
+
+
+	UIView *rootView = [UIApplication sharedApplication].keyWindow.rootViewController.view;
+	CGFloat x = 0;
+	CGFloat y = 0;
+	
+	CGSize size = [Yodo1MasBanner sizeFromAdSize:bannerView.adSize];
+	
+	CGFloat width = size.width;
+	CGFloat height = size.height;
+
+	// Horizontal alignment
+	if ([bannerHAlign isEqualToString:@"Center"]) {
+		x = (rootView.bounds.size.width - width) * 0.5;
+	} else if ([bannerHAlign isEqualToString:@"Right"]) {
+		x = rootView.bounds.size.width - width;
+	} // default: left
+	
+
+	// Vertical alignment
+	if ([bannerVAlign isEqualToString:@"Center"]) {
+		y = (rootView.bounds.size.height) * 0.5;
+	} else if ([bannerVAlign isEqualToString:@"Bottom"]) {
+		y = rootView.bounds.size.height - height;
+	} // default: top
+	
+	NSLog(@"[updateBannerPosition] setting banner position: [%@, %@]", bannerHAlign, bannerVAlign);
+	NSLog(@"[updateBannerPosition] setting banner size: [%f, %f]", width, height);
+
+	bannerView.frame = CGRectMake(x, y, width, height);
 }
 
 void GodotYodo1Mas::hideBannerAd() {
-	// TODO
+	if (bannerView) {
+		NSLog(@"[hideBannerAd] hiding banner ad");
+		bannerView.hidden = YES;
+	}
 }
 
 void GodotYodo1Mas::showBannerAd() {
-	// TODO
-	//NSString *placementIdPr = [NSString stringWithCString:placementId.utf8().get_data() encoding: NSUTF8StringEncoding];
-	//[[Yodo1MasRewardAd sharedInstance] showAdWithPlacement:placementIdPr];
+	if (bannerView) {
+		NSLog(@"[showBannerAd] showing banner ad");
+		bannerView.hidden = NO;
+	}
 }
 
 // END BANNER AD
@@ -279,6 +395,24 @@ void GodotYodo1Mas::showInterstitialAd(const String& placementId) {
 
 
 
+// BEGIN APP OPEN AD
+
+bool GodotYodo1Mas::isAppOpenAdLoaded() {
+	return false; // TODO
+}
+
+void GodotYodo1Mas::initializeAppOpenAd() {
+	// TODO
+}
+
+void GodotYodo1Mas::showAppOpenAd(const String& placementId) {
+	// TODO
+}
+
+// END APP OPEN AD
+
+
+
 // BEGIN REWARDED AD
 
 bool GodotYodo1Mas::isRewardedAdLoaded() {
@@ -287,7 +421,8 @@ bool GodotYodo1Mas::isRewardedAdLoaded() {
 
 void GodotYodo1Mas::initializeRewardedAd() {
 	if (!initialized) {
-		NSLog(@"GodotYodo1MasWrapper Module not initialized");
+		NSLog(@"GodotYodo1Mas -> initializeRewardedAd: GodotYodo1MasWrapper Module not initialized");
+		rewardAdinitializeRequest = true;
 		return;
 	}
 
@@ -303,6 +438,7 @@ void GodotYodo1Mas::showRewardedAd(const String& placementId) {
 	bool isLoaded = isRewardedAdLoaded();
 	NSLog(@"GodotYodo1MasWrapper isRewardedAdLoaded %d", isLoaded);
 	if(!isLoaded) {
+		initializeRewardedAd();
 		godotYodo1MasInstance->emit_signal("onRewardAdFailedToLoad");
 		return;
 	}

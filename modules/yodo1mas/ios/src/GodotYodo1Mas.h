@@ -7,7 +7,6 @@ class GodotYodo1Mas : public RefCounted {
     GDCLASS(GodotYodo1Mas, RefCounted);
 
     bool initialized;
-
 protected:
     static void _bind_methods();
 
@@ -40,6 +39,8 @@ public:
 	bool isRewardedAdLoaded();
 	void initializeRewardedAd();
     void showRewardedAd(const String& placementId);
+	
+	void updateBannerPosition();
 
     GodotYodo1Mas();
     ~GodotYodo1Mas();
