@@ -6,7 +6,17 @@ This fork adds Yodo1 ad SDK support (banner, interstitial, rewarded) for iOS pla
 
 - Based on: [Godot v4.4](https://github.com/godotengine/godot/tree/4.4)
 
-By [Gabor Bacsi](https://github.com/BacheyG)
+By [Gabor Bacsi](https://github.com/Stellarica-Interactive)
+
+### Python virtual environment for builder
+
+To use the builder script, create a Python virtual environment in the `.venv` folder:
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+pip install -r requirements.txt  # If requirements file exists
+```
 
 # Godot Engine
 
