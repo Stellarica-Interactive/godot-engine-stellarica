@@ -1,5 +1,5 @@
 #include "GodotYodo1Mas.h"
-#import "app_delegate.h"
+#import "drivers/apple_embedded/godot_app_delegate.h"
 #import "Yodo1Mas.h"
 #import "Yodo1MasBanner.h"
 
