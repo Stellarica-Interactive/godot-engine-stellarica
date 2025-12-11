@@ -49,10 +49,8 @@ repositories {
 }
 
 dependencies {
-    compileOnly fileTree(dir: 'libs', include: ['*.jar', '*.aar'])
-
     // Godot library
-    compileOnly files("../../../bin/godot-lib.template_release.aar")
+    compileOnly fileTree(dir: 'libs', include: ['*.jar', '*.aar'])
 
     // Yodo1 MAS SDK
     implementation 'com.yodo1.mas:full:4.17.1'

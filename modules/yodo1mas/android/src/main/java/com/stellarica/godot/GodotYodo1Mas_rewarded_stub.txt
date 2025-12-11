@@ -1,0 +1,17 @@
+    // Rewarded Ad Methods - TODO: Update for v4.17.1 API
+    private static void setupRewardedCallbacks() {
+        // Rewarded ads API changed in v4.17.1 - needs updating
+        Log.w(TAG, "Rewarded ads not yet implemented for Yodo1 MAS v4.17.1");
+    }
+
+    public static boolean isRewardedAdLoaded() {
+        return rewardedAdLoaded;
+    }
+
+    public static void initializeRewardedAd() {
+        Log.w(TAG, "Rewarded ads not yet implemented for Yodo1 MAS v4.17.1");
+    }
+
+    public static void showRewardedAd(final String placementId) {
+        Log.w(TAG, "Rewarded ads not yet implemented for Yodo1 MAS v4.17.1");
+    }

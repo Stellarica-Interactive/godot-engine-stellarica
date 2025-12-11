@@ -1,6 +1,6 @@
 # Godot 2.1 only passes platform. Godot 3+ build passes env, platform
 def can_build(env, platform):
-    return platform in ["ios", "android"]
+    return platform in ["ios"]
 
 
 def configure(env):
