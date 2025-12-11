@@ -14,7 +14,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (instancetype)init NS_UNAVAILABLE;
 - (instancetype)initWithCoder:(NSCoder *)coder NS_UNAVAILABLE;
-- (instancetype)initWithDomain:(NSErrorDomain)domain code:(NSInteger)code userInfo:(NSDictionary<NSErrorUserInfoKey,id> *)dict NS_UNAVAILABLE;
+- (instancetype)initWithDomain:(NSErrorDomain)domain code:(NSInteger)code userInfo:(nullable NSDictionary<NSErrorUserInfoKey,id> *)dict NS_UNAVAILABLE;
 - (instancetype)initWitCode:(Yodo1MasErrorCode)code message:(NSString * _Nullable)message;
 
 - (NSDictionary *)getJsonObject;
