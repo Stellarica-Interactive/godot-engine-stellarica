@@ -29,9 +29,9 @@
 /**************************************************************************/
 
 #include "GodotYodo1Mas.h"
-#import "drivers/apple_embedded/godot_app_delegate.h"
 #import "Yodo1Mas.h"
 #import "Yodo1MasBanner.h"
+#import "drivers/apple_embedded/godot_app_delegate.h"
 
 static GodotYodo1Mas* godotYodo1MasInstance = NULL;
 
