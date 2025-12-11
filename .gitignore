@@ -391,3 +391,6 @@ $RECYCLE.BIN/
 *.lnk
 *.generated.props
 imgui.ini
+/modules/yodo1mas/android/build/intermediates
+*.hprof
+/modules/yodo1mas/android/build/outputs

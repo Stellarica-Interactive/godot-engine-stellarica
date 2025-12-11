@@ -1,0 +1,59 @@
+buildscript {
+    apply from: '../../../platform/android/java/app/config.gradle'
+
+    repositories {
+        google()
+        mavenCentral()
+        gradlePluginPortal()
+    }
+
+    dependencies {
+        classpath "com.android.tools.build:gradle:$versions.androidGradlePlugin"
+    }
+}
+
+apply plugin: 'com.android.library'
+
+android {
+    compileSdkVersion versions.compileSdk
+
+    defaultConfig {
+        minSdkVersion versions.minSdk
+        targetSdkVersion versions.targetSdk
+    }
+
+    compileOptions {
+        sourceCompatibility versions.javaVersion
+        targetCompatibility versions.javaVersion
+    }
+
+    libraryVariants.all { variant ->
+        variant.outputs.all { output ->
+            outputFileName = "GodotYodo1Mas.aar"
+        }
+    }
+
+    namespace 'com.stellarica.godot'
+}
+
+repositories {
+    google()
+    mavenCentral()
+    maven { url "https://artifact.bytedance.com/repository/pangle" }
+    maven { url "https://android-sdk.is.com" }
+    maven { url "https://dl-maven-android.mintegral.com/repository/mbridge_android_sdk_oversea" }
+    maven { url "https://artifactory.bidmachine.io/bidmachine" }
+    maven { url "https://ysonetwork.s3.eu-west-3.amazonaws.com/sdk/android" }
+    maven { url "https://repo.pubmatic.com/artifactory/public-repos" }
+    maven { url "https://cboost.jfrog.io/artifactory/chartboost-ads/" }
+}
+
+dependencies {
+    compileOnly fileTree(dir: 'libs', include: ['*.jar', '*.aar'])
+
+    // Godot library
+    compileOnly files("../../../bin/godot-lib.template_release.aar")
+
+    // Yodo1 MAS SDK
+    implementation 'com.yodo1.mas:full:4.17.1'
+}
