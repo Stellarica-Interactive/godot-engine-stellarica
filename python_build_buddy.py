@@ -62,6 +62,52 @@ def show_user_folder():
     else:
         print(f"user:// path not found: {user_path}")
 
+def copy_to_templates():
+    import shutil
+
+    # Find the templates directory and get the latest version
+    templates_base = os.path.expanduser("~/Library/Application Support/Godot/export_templates")
+
+    if not os.path.exists(templates_base):
+        print(f"Templates directory not found: {templates_base}")
+        return
+
+    # Get all version directories and sort (asc by name)
+    versions = [d for d in os.listdir(templates_base) if os.path.isdir(os.path.join(templates_base, d))]
+
+    if not versions:
+        print("No template versions found")
+        return
+
+    versions.sort()
+    latest_version = versions[-1]  # Get the latest (last when sorted ascending)
+    target_dir = os.path.join(templates_base, latest_version)
+
+    print(f"Copying binaries to: {target_dir}")
+
+    # Define source and destination mappings
+    copies = [
+        ("bin/android_source.zip", "android_source.zip"),
+        ("bin/android_debug.apk", "android_debug.apk"),
+        ("bin/android_release.apk", "android_release.apk"),
+        ("bin/godot-ios.zip", "godot-ios.zip"),
+    ]
+
+    copied_count = 0
+    for src, dest in copies:
+        if os.path.exists(src):
+            dest_path = os.path.join(target_dir, dest)
+            try:
+                shutil.copy2(src, dest_path)
+                print(f"Copied: {src} -> {dest_path}")
+                copied_count += 1
+            except Exception as e:
+                print(f"Error copying {src}: {e}")
+        else:
+            print(f"Source file not found: {src}")
+
+    print(f"Copied {copied_count} file(s) to templates folder")
+
 def main():
     if not glfw.init():
         print("Could not initialize OpenGL context")
@@ -108,6 +154,9 @@ def main():
             
         if imgui.button("Show user:// in Finder"):
             show_user_folder()
+
+        if imgui.button("Copy Binaries to Templates"):
+            copy_to_templates()
 
         imgui.end()
         imgui.render()
