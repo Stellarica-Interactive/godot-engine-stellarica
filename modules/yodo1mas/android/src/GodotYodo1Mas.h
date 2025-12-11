@@ -28,9 +28,6 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#ifndef GODOT_YODO1MAS_ANDROID_H
-#define GODOT_YODO1MAS_ANDROID_H
-
 #pragma once
 
 #include "core/object/ref_counted.h"
@@ -78,5 +75,3 @@ public:
 	GodotYodo1Mas();
 	~GodotYodo1Mas();
 };
-
-#endif // GODOT_YODO1MAS_ANDROID_H
