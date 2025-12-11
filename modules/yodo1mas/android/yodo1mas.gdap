@@ -1,0 +1,11 @@
+[config]
+
+name="GodotYodo1Mas"
+binary_type="local"
+binary="GodotYodo1Mas.aar"
+
+[dependencies]
+
+local=[]
+remote=["com.yodo1.mas:full:4.17.1"]
+custom_maven_repos=[]

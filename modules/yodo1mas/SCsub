@@ -1,11 +1,17 @@
 
 Import('env')
 
-sources = [
-           'register_types.cpp',
-           'ios/src/GodotYodo1Mas.mm',
-           ]
+if env["platform"] == "ios":
+    sources = [
+        'register_types.cpp',
+        'ios/src/GodotYodo1Mas.mm',
+    ]
+    env.add_source_files(env.modules_sources, sources)
 
-if (env["platform"] == "ios"):
+if env["platform"] == "android":
+    sources = [
+        'register_types.cpp',
+        'android/src/GodotYodo1Mas.cpp',
+    ]
     env.add_source_files(env.modules_sources, sources)
 

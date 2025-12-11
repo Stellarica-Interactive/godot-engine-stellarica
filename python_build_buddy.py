@@ -38,12 +38,15 @@ def get_extra_args(suffix_file):
 
 def build_android(suffix_file):
     build_suffix = get_extra_args(suffix_file)
+    run_command("scons platform=android target=template_debug arch=arm32 " + build_suffix)
+    run_command("scons platform=android target=template_debug arch=arm64 " + build_suffix)
     run_command("scons platform=android target=template_release arch=arm32 " + build_suffix)
     run_command("scons platform=android target=template_release arch=arm64 generate_apk=yes " + build_suffix)
 
 def build_ios(suffix_file):
     build_suffix = get_extra_args(suffix_file)
-    run_command("scons platform=ios target=template_release arch=arm64 generate_bundle=yes" + build_suffix)
+    run_command("scons platform=ios target=template_debug arch=arm64 " + build_suffix)
+    run_command("scons platform=ios target=template_release arch=arm64 generate_bundle=yes " + build_suffix)
 
 def run_editor():
     editor_path = "bin/godot.macos.editor.arm64"
